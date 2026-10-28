@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CryptoVelo | Register</title>
+    <style>
+        body { background-color: #0b0e11; color: #eaecef; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .card { background: #151a21; padding: 30px; border-radius: 8px; border: 1px solid #262c36; width: 320px; }
+        h2 { margin-bottom: 20px; color: #00f2fe; text-align: center; }
+        input { width: 100%; padding: 10px; margin: 10px 0; background: #0b0e11; border: 1px solid #262c36; color: #fff; border-radius: 4px; box-sizing: border-box; }
+        button { width: 100%; padding: 10px; background: #00f2fe; border: none; font-weight: bold; border-radius: 4px; cursor: pointer; margin-top: 10px; color: #0b0e11; }
+        p { text-align: center; font-size: 0.85rem; color: #848e9c; }
+        a { color: #00f2fe; text-decoration: none; }
+        .error { color: #ff3366; font-size: 0.8rem; margin-bottom: 10px; text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>Create Account</h2>
+        <% if (error) { %><div class="error"><%= error %></div><% } %>
+        <form action="/signup" method="POST">
+            <input type="email" name="email" placeholder="Email Address" required>
+            <input type="password" name="password" placeholder="Password (min 6 chars)" required>
+            <button type="submit">Register</button>
+        </form>
+        <p style="margin-top: 15px;">Have an account? <a href="/login">Sign in</a></p>
+    </div>
+</body>
+</html>

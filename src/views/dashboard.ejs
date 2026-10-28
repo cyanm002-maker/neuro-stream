@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CryptoVelo | Live Terminal</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        :root { --bg-base: #0b0e11; --bg-card: #151a21; --border-color: #262c36; --text-main: #eaecef; --text-muted: #848e9c; --accent-cyan: #00f2fe; --accent-green: #00ff88; --accent-red: #ff3366; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: monospace, sans-serif; }
+        body { background-color: var(--bg-base); color: var(--text-main); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        header { background-color: var(--bg-card); border-bottom: 1px solid var(--border-color); padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; }
+        .logo h1 { font-size: 1.25rem; color: var(--text-main); }
+        .logo span { color: var(--accent-cyan); }
+        .logout-btn { color: var(--text-muted); text-decoration: none; font-size: 0.85rem; }
+        .logout-btn:hover { color: var(--accent-red); }
+        .grid { display: grid; grid-template-columns: 2.5fr 1fr; flex: 1; gap: 12px; padding: 12px; overflow: hidden; }
+        .card { background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; display: flex; flex-direction: column; padding: 16px; overflow: hidden; }
+        .card-title { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 10px; text-transform: uppercase; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        th, td { padding: 6px 8px; text-align: left; }
+        th { color: var(--text-muted); }
+        .price-up { color: var(--accent-green); }
+        .price-down { color: var(--accent-red); }
+        .table-scroll { overflow-y: auto; flex: 1; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo"><h1>Crypto<span>Velo</span> Terminal</h1></div>
+        <a href="/logout" class="logout-btn">Logout</a>
+    </header>
+
+    <div class="grid">
+        <div class="card">
+            <div class="card-title">BTC/USDT Real-Time Price Action</div>
+            <div style="flex: 2; position: relative;"><canvas id="priceChart"></canvas></div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">Live Binance Feed (@trade)</div>
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                        <tr><th>Time</th><th>Price</th><th>Qty</th></tr>
+                    </thead>
+                    <tbody id="tickTable">
+                        <% ticks.forEach(tick => { %>
+                            <tr>
+                                <td><%= tick.timestamp %></td>
+                                <td class="<%= tick.isBuyerMaker ? 'price-down' : 'price-up' %>">$<%= tick.price %></td>
+                                <td><%= tick.quantity %></td>
+                            </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const socket = io();
+        const ctx = document.getElementById('priceChart').getContext('2d');
+        const chart = new Chart(ctx, {
+            type: 'line',
+            data: { labels: [], datasets: [{ data: [], borderColor: '#00f2fe', borderWidth: 2, pointRadius: 0 }] },
+            options: { responsive: true, maintainAspectRatio: false, scales: { x: { display: false }, y: { grid: { color: '#262c36' } } }, plugins: { legend: { display: false } } }
+        });
+
+        socket.on('live-tick', (tick) => {
+            const timeStr = tick.timestamp;
+            const priceVal = parseFloat(tick.price);
+
+            if (chart.data.labels.length > 25) {
+                chart.data.labels.shift();
+                chart.data.datasets[0].data.shift();
+            }
+            chart.data.labels.push(timeStr);
+            chart.data.datasets[0].data.push(priceVal);
+            chart.update('none');
+
+            const tbody = document.getElementById('tickTable');
+            const rowClass = tick.isBuyerMaker ? 'price-down' : 'price-up';
+            const row = `<tr><td>${timeStr}</td><td class="${rowClass}">$${tick.price}</td><td>${tick.quantity}</td></tr>`;
+            tbody.insertAdjacentHTML('afterbegin', row);
+            if (tbody.rows.length > 20) tbody.deleteRow(-1);
+        });
+    </script>
+</body>
+</html>
